@@ -1,66 +1,48 @@
 """Find maximum flow in 'links.csv'."""
-
-# Python 3.10+ required
-from enum import Enum, unique
-import networkx as nx
 import os.path
-from typing import BinaryIO, TextIO
+import networkx as nx
 
 
 def path_to(filename: str):
     """Relative path to `filename` from current 'maxflow.py' file."""
     try:
-        program = __file__
+        basedir = os.path.dirname(__file__)
+        fullpath = os.path.join(basedir, filename)
+        return fullpath
     # some environemnts (like bpython) don't define '__file__',
     # so we assume that the file is in the current directory
     except NameError:
         return filename
 
-    basedir = os.path.dirname(program)
-    fullpath = os.path.join(basedir, filename)
-    return os.path.relpath(fullpath)
 
-
-COST = 'cost'
-
-
-def read_graph(*, links: str | TextIO = path_to('links.csv')) -> nx.DiGraph:
+def read_graph(*, links: str = path_to('links.csv')) -> nx.DiGraph:
     """Read nodes and links from the provided file."""
-    return nx.read_edgelist(links, delimiter=',', create_using=nx.DiGraph, data=((COST, int),))
+    return nx.read_edgelist(links, delimiter=',', create_using=nx.DiGraph, data=(('capacity', int),))
 
 
-def max_flow(graph: nx.DiGraph, /, *, source: str, sink: str) -> int:
-    # """
-    return 0
+def max_flow(graph: nx.DiGraph, source: str, sink: str) -> int:
+    """Find the maximum flow from `source` to `sink` in `graph`."""
+    flow, _ = nx.maximum_flow(graph, source, sink)
+    return flow
 
 
-def draw_graph(graph: nx.DiGraph, /, output: BinaryIO | None = None):
+def draw_graph(graph: nx.DiGraph):
     """Draw graph and its components using Matplotlib."""
-    from matplotlib import pyplot as plt
+    from matplotlib import pyplot as plt  # matplotlib is only required for drawing
 
     # nodes
-    position = nx.kamada_kawai_layout(graph)
-    nx.draw(graph, pos=position, node_size=1000, font_size=10, with_labels=True)
+    try:
+        position = nx.kamada_kawai_layout(graph)
+    except ModuleNotFoundError:  # kamada kawai requires SciPy
+        position = None
+    nx.draw(graph, position, with_labels=True, node_size=1000, font_size=10)
 
     # edges
-    cost = {(u,v): c for u,v,c in graph.edges.data(COST)}
-    nx.draw_networkx_edge_labels(graph, position, edge_labels=cost)
+    capacity = {(u,v): c for u,v,c in graph.edges.data('capacity')}
+    nx.draw_networkx_edge_labels(graph, position, edge_labels=capacity)
 
-    if output is None:
-        plt.show(block=True)
-    else:
-        plt.savefig(output)
-
-
-@unique
-class OutputMode(Enum):
-    NO_OUTPUT = 'NO OUTPUT'
-    SHOW_OUTPUT = 'SHOW'
-
-
-class Arguments:
-    number: bool = False
-    draw: BinaryIO | OutputMode
+    # draw on a new window
+    plt.show(block=True)
 
 
 if __name__ == '__main__':
@@ -68,25 +50,19 @@ if __name__ == '__main__':
 
     # arguments
     parser = ArgumentParser('maxflow.py')
-    parser.add_argument('-d', '--draw', metavar='OUTPUT', nargs='?',
-        type=FileType(mode='wb'), default=OutputMode.NO_OUTPUT, const=OutputMode.SHOW_OUTPUT,
-        help=('Draw NetworkX graph to OUTPUT using Matplotlib. If no argument is provided,'
-            ' the graph is drawn on a new window.'))
+    parser.add_argument('-d', '--draw', action='store_true',
+        help='draw NetworkX graph using Matplotlib')
 
-    args = parser.parse_args(namespace=Arguments)
+    args = parser.parse_args()
 
     # reading input
     graph = read_graph()
+    source, sink = 'Ti', 'Iu'
 
     # maximum flow
-    flow = max_flow(graph, source='Ti', sink='Iu')
-    print(flow)
+    flow = max_flow(graph, source, sink)
+    print(f'Maximum Flow from {source} to {sink}:', flow)
 
     # rendering with matplolib
-    match args.draw:
-        case OutputMode.NO_OUTPUT:
-            pass
-        case OutputMode.SHOW_OUTPUT:
-            draw_graph(graph)
-        case output_file:
-            draw_graph(graph, output=output_file)
+    if args.draw:
+        draw_graph(graph)
