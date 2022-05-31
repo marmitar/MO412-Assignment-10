@@ -1,10 +1,10 @@
 """Find maximum flow in 'links.csv'."""
 
 # Python 3.10+ required
-from enum import Enum, auto, unique
+from enum import Enum, unique
 import networkx as nx
 import os.path
-from typing import Any, BinaryIO, TextIO
+from typing import BinaryIO, TextIO
 
 
 def path_to(filename: str):
@@ -21,12 +21,16 @@ def path_to(filename: str):
     return os.path.relpath(fullpath)
 
 
+COST = 'cost'
+
+
 def read_graph(*, links: str | TextIO = path_to('links.csv')) -> nx.DiGraph:
     """Read nodes and links from the provided file."""
-    return nx.read_edgelist(links, delimiter=',', create_using=nx.DiGraph, data=(('cost',int),))
+    return nx.read_edgelist(links, delimiter=',', create_using=nx.DiGraph, data=((COST, int),))
 
 
 def max_flow(graph: nx.DiGraph, /, *, source: str, sink: str) -> int:
+    # """
     return 0
 
 
@@ -34,7 +38,13 @@ def draw_graph(graph: nx.DiGraph, /, output: BinaryIO | None = None):
     """Draw graph and its components using Matplotlib."""
     from matplotlib import pyplot as plt
 
-    nx.draw(graph, node_size=1000, font_size=10)
+    # nodes
+    position = nx.kamada_kawai_layout(graph)
+    nx.draw(graph, pos=position, node_size=1000, font_size=10, with_labels=True)
+
+    # edges
+    cost = {(u,v): c for u,v,c in graph.edges.data(COST)}
+    nx.draw_networkx_edge_labels(graph, position, edge_labels=cost)
 
     if output is None:
         plt.show(block=True)
