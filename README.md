@@ -4,6 +4,8 @@ Consider the flow network given by the attached file [links.csv](links.csv) cont
 
 Instead of doing the max flow calculation by hand or writing your own code to do it, we recommend that you use some already tested implementation from the internet, e.g., networkx has a few implementations you can use.
 
+Please submit your code (can be a Jupyter notebook) together with your answer (max flow) in Assignment 10.  I forgot to ask in the instructions.
+
 <!-- ## Turn in
 
 ![Final Graph](graph.png) -->
