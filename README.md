@@ -6,6 +6,9 @@ Instead of doing the max flow calculation by hand or writing your own code to do
 
 Please submit your code (can be a Jupyter notebook) together with your answer (max flow) in Assignment 10.  I forgot to ask in the instructions.
 
-<!-- ## Turn in
+## Turn in
 
-![Final Graph](graph.png) -->
+```bash
+$ python3 maxflow.py
+Maximum Flow from Ti to Iu: 3
+```

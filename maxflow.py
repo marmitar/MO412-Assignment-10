@@ -26,16 +26,34 @@ def max_flow(graph: nx.DiGraph, source: str, sink: str) -> int:
     return flow
 
 
-def draw_graph(graph: nx.DiGraph):
+def default_color(n: int):
+    """Get the `n`th color from the default Matplotlib cycler."""
+    from matplotlib import rcParams
+
+    # from https://matplotlib.org/stable/gallery/color/color_cycle_default.html
+    prop_cycle = rcParams['axes.prop_cycle']
+    colors = prop_cycle.by_key()['color']
+
+    for idx, color in enumerate(colors):
+        if idx >= n:
+            return color
+    return 'blue'
+
+
+def draw_graph(graph: nx.DiGraph, source: str, sink: str):
     """Draw graph and its components using Matplotlib."""
     from matplotlib import pyplot as plt  # matplotlib is only required for drawing
 
-    # nodes
+    # node position (Kamada-Kawai requires SciPy)
     try:
         position = nx.kamada_kawai_layout(graph)
-    except ModuleNotFoundError:  # kamada kawai requires SciPy
+    except ModuleNotFoundError:
         position = None
-    nx.draw(graph, position, with_labels=True, node_size=1000, font_size=10)
+
+    # node & color
+    colordict = {source: default_color(2), sink: default_color(1)}
+    colors = tuple(colordict.get(node, default_color(0)) for node in graph.nodes)
+    nx.draw(graph, position, node_color=colors, with_labels=True, node_size=1000, font_size=10)
 
     # edges
     capacity = {(u,v): c for u,v,c in graph.edges.data('capacity')}
@@ -52,6 +70,8 @@ if __name__ == '__main__':
     parser = ArgumentParser('maxflow.py')
     parser.add_argument('-d', '--draw', action='store_true',
         help='draw NetworkX graph using Matplotlib')
+    parser.add_argument('-q', '--quiet', action='store_true',
+        help='only print the maximum flow value')
 
     args = parser.parse_args()
 
@@ -61,8 +81,11 @@ if __name__ == '__main__':
 
     # maximum flow
     flow = max_flow(graph, source, sink)
-    print(f'Maximum Flow from {source} to {sink}:', flow)
+    if args.quiet:
+        print(flow)
+    else:
+        print(f'Maximum Flow from {source} to {sink}:', flow)
 
     # rendering with matplolib
     if args.draw:
-        draw_graph(graph)
+        draw_graph(graph, source, sink)
