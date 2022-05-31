@@ -70,8 +70,6 @@ if __name__ == '__main__':
     parser = ArgumentParser('maxflow.py')
     parser.add_argument('-d', '--draw', action='store_true',
         help='draw NetworkX graph using Matplotlib')
-    parser.add_argument('-q', '--quiet', action='store_true',
-        help='only print the maximum flow value')
 
     args = parser.parse_args()
 
@@ -81,10 +79,7 @@ if __name__ == '__main__':
 
     # maximum flow
     flow = max_flow(graph, source, sink)
-    if args.quiet:
-        print(flow)
-    else:
-        print(f'Maximum Flow from {source} to {sink}:', flow)
+    print(f'Maximum Flow from {source} to {sink}:', flow)
 
     # rendering with matplolib
     if args.draw:
